@@ -1,0 +1,64 @@
+diff --git a/packages/libx265/build.sh b/packages/libx265/build.sh
+index 8c66ea545..c98ce3f98 100644
+--- a/packages/libx265/build.sh
++++ b/packages/libx265/build.sh
+@@ -27,7 +27,7 @@ termux_step_pre_configure() {
+ 		TERMUX_PKG_EXTRA_CONFIGURE_ARGS="-DENABLE_ASSEMBLY=OFF"
+ 	elif [ "$TERMUX_ARCH" = arm ]; then
+ 		# Follow termux_step_setup_toolchain.sh
+-		ARM_ARGS+=" -march=armv7-a -mfpu=neon -mfloat-abi=softfp -mthumb"
++		ARM_ARGS+=" -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -mthumb"
+ 		# Avoid text relocations.
+ 		TERMUX_PKG_EXTRA_CONFIGURE_ARGS="-DENABLE_ASSEMBLY=OFF"
+ 	fi
+diff --git a/packages/libx265/source-CMakeLists.txt.patch b/packages/libx265/source-CMakeLists.txt.patch
+index 186a83ff1..809fe4ff7 100644
+--- a/packages/libx265/source-CMakeLists.txt.patch
++++ b/packages/libx265/source-CMakeLists.txt.patch
+@@ -40,7 +40,6 @@ index a407271b4..6ecfda3ee 100755
+ -            endif()
+ -        endif()
+ +        set(ARM_ARGS @ARM_ARGS@ -fPIC)
+-+        add_definitions(-DHAVE_NEON)
+      endif()
+      add_definitions(${ARM_ARGS})
+      if(FPROFILE_GENERATE)
+diff --git a/packages/pypy/termux-build.patch b/packages/pypy/termux-build.patch
+index 8f4937af3..76aaf6714 100644
+--- a/packages/pypy/termux-build.patch
++++ b/packages/pypy/termux-build.patch
+@@ -197,7 +197,7 @@ diff -uNr pypy2.7-v7.3.6-src/rpython/translator/platform/__init__.py pypy2.7-v7.
+ +
+ +def _update_cflags_for_termux_arm(cflags):
+ +    return ('-I' + TARGET_ROOTFS_BASE + '@TERMUX_PREFIX@/include',
+-+            "-march=armv7-a", "-mfpu=neon",
+++            "-march=armv7-a", "-mfpu=vfpv3-d16",
+ +            "-mfloat-abi=softfp", "-mthumb", ) + cflags
+ +
+ +def _update_link_flags_for_termux_arm(ldflags):
+diff --git a/packages/pypy3/termux-build.patch b/packages/pypy3/termux-build.patch
+index 8f4937af3..76aaf6714 100644
+--- a/packages/pypy3/termux-build.patch
++++ b/packages/pypy3/termux-build.patch
+@@ -197,7 +197,7 @@ diff -uNr pypy2.7-v7.3.6-src/rpython/translator/platform/__init__.py pypy2.7-v7.
+ +
+ +def _update_cflags_for_termux_arm(cflags):
+ +    return ('-I' + TARGET_ROOTFS_BASE + '@TERMUX_PREFIX@/include',
+-+            "-march=armv7-a", "-mfpu=neon",
+++            "-march=armv7-a", "-mfpu=vfpv3-d16",
+ +            "-mfloat-abi=softfp", "-mthumb", ) + cflags
+ +
+ +def _update_link_flags_for_termux_arm(ldflags):
+diff --git a/scripts/build/termux_step_setup_toolchain.sh b/scripts/build/termux_step_setup_toolchain.sh
+index c6e160888..fd43d07c6 100644
+--- a/scripts/build/termux_step_setup_toolchain.sh
++++ b/scripts/build/termux_step_setup_toolchain.sh
+@@ -50,7 +50,7 @@ termux_step_setup_toolchain() {
+ 		# https://developer.android.com/ndk/guides/standalone_toolchain.html#abi_compatibility:
+ 		# "We recommend using the -mthumb compiler flag to force the generation of 16-bit Thumb-2 instructions".
+ 		# With r13 of the ndk ruby 2.4.0 segfaults when built on arm with clang without -mthumb.
+-		CFLAGS+=" -march=armv7-a -mfpu=neon -mfloat-abi=softfp -mthumb"
++		CFLAGS+=" -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -mthumb"
+ 		LDFLAGS+=" -march=armv7-a"
+ 		export GOARCH=arm
+ 		export GOARM=7
