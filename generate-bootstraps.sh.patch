@@ -1,0 +1,106 @@
+diff -uNr termux-packages/scripts/generate-bootstraps.sh termux-packages.mod/scripts/generate-bootstraps.sh
+--- termux-packages/scripts/generate-bootstraps.sh	2022-08-13 19:14:06.582149394 +0800
++++ termux-packages.mod/scripts/generate-bootstraps.sh	2022-08-17 23:27:20.234452836 +0800
+@@ -13,6 +13,11 @@
+ # and <10.
+ BOOTSTRAP_ANDROID10_COMPATIBLE=false
+ 
++# Optional caching of downloaded packages in output directory
++# Apt only for now
++TERMUX_PACKAGE_DOWNLOAD_CACHE=false
++TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR="$PWD/output"
++
+ # By default, bootstrap archives will be built for all architectures
+ # supported by Termux application.
+ # Override with option '--architectures'.
+@@ -119,8 +124,9 @@
+ 	mkdir -p "$package_tmpdir"
+ 
+ 	if [ ${TERMUX_PACKAGE_MANAGER} = "apt" ]; then
+-		local package_url
++		local package_url package_file
+ 		package_url="$REPO_BASE_URL/$(echo "${PACKAGE_METADATA[${package_name}]}" | grep -i "^Filename:" | awk '{ print $2 }')"
++		package_file="$(echo "$package_url" | sed -e 's|\(.*\)\/\(.*\).deb$|\2.deb|')"
+ 		if [ "${package_url}" = "$REPO_BASE_URL" ] || [ "${package_url}" = "${REPO_BASE_URL}/" ]; then
+ 			echo "[!] Failed to determine URL for package '$package_name'."
+ 			exit 1
+@@ -144,10 +150,28 @@
+ 			unset dep
+ 		fi
+ 
++		if [ "$TERMUX_PACKAGE_DOWNLOAD_CACHE" = true ]; then
++			# since each generate-bootstraps.sh run will have different package_tmpdir
++			# we dont have to check existence of both files and even so prioritise the cached copy
++			# also use symbolic link to save space and I/O
++			echo "[*] Checking '$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR' for cached copy of '$package_name' package file..."
++			if [ -e "$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR/$package_file" ]; then
++				echo "[*] Symlinking cached '$package_file' to '$package_tmpdir'..."
++				ln -fsT "$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR/$package_file" "$package_tmpdir/package.deb"
++			else
++				echo "[*] Cached copy of '$package_file' not found. Skipping..."
++			fi
++		fi
++
+ 		if [ ! -e "$package_tmpdir/package.deb" ]; then
+ 			echo "[*] Downloading '$package_name'..."
+ 			curl --fail --location --output "$package_tmpdir/package.deb" "$package_url"
+ 
++			if [ "$TERMUX_PACKAGE_DOWNLOAD_CACHE" = true ]; then
++				echo "[*] Caching '$package_name' package.deb to '$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR/$package_file'..."
++				cp -f "$package_tmpdir/package.deb" "$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR/$package_file"
++			fi
++
+ 			echo "[*] Extracting '$package_name'..."
+ 			(cd "$package_tmpdir"
+ 				ar x package.deb
+@@ -295,6 +319,11 @@
+ 	echo "                             Multiple packages should be passed as"
+ 	echo "                             comma-separated list."
+ 	echo
++	echo " -c, --cache [DIR]           Enable caching. Downloaded package files will be"
++	echo "                             stored at output directory unless specified another"
++	echo "                             path. The files can be reused at later runs."
++	echo "                             This option is disabled by default and for apt only."
++	echo
+ 	echo " --pm MANAGER                Set up a package manager in bootstrap."
+ 	echo "                             It can only be pacman or apt (the default is apt)."
+ 	echo
+@@ -311,7 +340,7 @@
+ 	echo "Architectures: ${TERMUX_ARCHITECTURES[*]}"
+ 	echo "Repository Base Url: ${REPO_BASE_URL}"
+ 	echo "Prefix: ${TERMUX_PREFIX}"
+-        echo "Package manager: ${TERMUX_PACKAGE_MANAGER}"
++	echo "Package manager: ${TERMUX_PACKAGE_MANAGER}"
+ 	echo
+ }
+ 
+@@ -372,6 +401,13 @@
+ 				exit 1
+ 			fi
+ 			;;
++		-c|--cache)
++			if [ $# -gt 1 ] && [ -n "$2" ] && [[ $2 != -* ]]; then
++				TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR="$2"
++				shift 1
++			fi
++			TERMUX_PACKAGE_DOWNLOAD_CACHE=true
++			;;
+ 		*)
+ 			echo "[!] Got unknown option '$1'"
+ 			show_usage
+@@ -392,6 +428,15 @@
+ 	exit 1
+ fi
+ 
++if [ "$TERMUX_PACKAGE_DOWNLOAD_CACHE" = true ]; then
++	if [ "$TERMUX_PACKAGE_MANAGER" != apt ]; then
++		echo "[!] Option '--cache' does not support '$TERMUX_PACKAGE_MANAGER' yet." 1>&2
++		exit 1
++	fi
++	echo "[*] Caching enabled. Cached packages will be stored at '$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR'."
++	mkdir -p "$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR"
++fi
++
+ for package_arch in "${TERMUX_ARCHITECTURES[@]}"; do
+ 	BOOTSTRAP_ROOTFS="$BOOTSTRAP_TMPDIR/rootfs-${package_arch}"
+ 	BOOTSTRAP_PKGDIR="$BOOTSTRAP_TMPDIR/packages-${package_arch}"
