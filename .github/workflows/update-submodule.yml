@@ -1,0 +1,24 @@
+name: Update submodule
+
+# https://github.com/termux/termux-packages/blob/master/.github/workflows/bootstrap_archives.yml
+
+on:
+  schedule:
+    - cron: "0 0 * * 0"
+  workflow_dispatch:
+
+# https://github.com/actions/checkout#push-a-commit-using-the-built-in-token
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git submodule update --remote
+          git commit -am "submodule: update"
+          git push

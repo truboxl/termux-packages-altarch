@@ -3,7 +3,7 @@ name: Build bootstrap archives
 on:
   push:
     branches:
-    - master
+      - master
   pull_request:
   workflow_dispatch:
 
