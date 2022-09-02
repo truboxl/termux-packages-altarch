@@ -12,9 +12,11 @@ arm-vfpv3-d16)
 	TERMUX_ARCH=arm
 	patch -p1 -i "$REPOROOT/termux-packages.$1.lf.patch"
 	patch -p1 -i "$REPOROOT/termux-packages.$1.crlf.patch"
-	./scripts/run-docker.sh env TERMUX_NDK_VERSION_NUM=23 TERMUX_NDK_REVISION=c ./scripts/setup-android-sdk.sh
+	./scripts/setup-ubuntu.sh
+	cp -f "$REPOROOT/setup-android-sdk.sh" ./scripts/setup-android-sdk.sh
+	TERMUX_NDK_VERSION_NUM=23 TERMUX_NDK_REVISION=c ./scripts/setup-android-sdk.sh
 	rm -fr "$REPOROOT/output"
-	./scripts/run-docker.sh env TERMUX_NDK_VERSION_NUM=23 TERMUX_NDK_REVISION=c ./build-package.sh -a "$TERMUX_ARCH" "$2"
+	TERMUX_NDK_VERSION_NUM=23 TERMUX_NDK_REVISION=c ./build-package.sh -a "$TERMUX_ARCH" "$2"
 	;;
 *)
 	echo "[!] ERROR: Unsupported option $1"
