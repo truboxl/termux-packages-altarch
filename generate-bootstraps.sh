@@ -17,7 +17,7 @@ arm-vfpv3-d16)
 	patch -p1 -i "$REPOROOT/termux-packages.$1.lf.patch"
 	patch -p1 -i "$REPOROOT/termux-packages.$1.crlf.patch"
 	# Temporarily add this until pull request is merged
-	patch -p1 -i "$REPOROOT/generate-bootstraps.sh.patch"
+	cp -fv "$REPOROOT/generate-bootstraps-patch.sh" scripts/generate-bootstraps.sh
 	# Should not need to mkdir "$REPOROOT/output" if build-package.sh worked
 	./scripts/generate-bootstraps.sh -c "$REPOROOT/output" --architectures "$TERMUX_ARCH"
 	;;
