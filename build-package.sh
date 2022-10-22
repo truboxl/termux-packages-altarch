@@ -33,7 +33,7 @@ for package in libc++ ndk-multilib ndk-sysroot vulkan-loader-android; do
 	REVISION=""
 	if [ -e "$REPOROOT/output/${package}_${TERMUX_NDK_VERSION_NUM}${TERMUX_NDK_REVISION}.deb" ]; then
 		if [ -n "$(. "$REPOROOT/termux-packages/packages/$package/build.sh" | echo "$TERMUX_PKG_REVISION")" ]; then
-			REVISION=$(. "$REPOROOT/termux-packages/packages/$package/build.sh" | echo "$TERMUX_PKG_REVISION")
+			REVISION=$(. "$REPOROOT/termux-packages/packages/$package/build.sh" | echo "-${TERMUX_PKG_REVISION}")
 		fi
 		mv -v "$REPOROOT/output/${package}_${TERMUX_NDK_VERSION_NUM}${TERMUX_NDK_REVISION}.deb" "$REPOROOT/output/${package}_${TERMUX_NDK_VERSION_LATEST}${REVISION}.deb"
 	fi
