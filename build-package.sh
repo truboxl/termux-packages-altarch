@@ -2,6 +2,7 @@
 set -e
 
 export REPOROOT="$PWD"
+export TERMUX_NDK_VERSION_LATEST=$(. "$REPOROOT/termux-packages/scripts/properties.sh"; echo "$TERMUX_NDK_VERSION")
 export TERMUX_ARCH
 export TERMUX_NDK_VERSION_NUM
 export TERMUX_NDK_REVISION
@@ -25,6 +26,18 @@ arm-vfpv3-d16)
 	echo "[!] ERROR: Unsupported option $1"
 	exit 1
 esac
+
+# some packages uses TERMUX_NDK_VERSION as TERMUX_PKG_VERSION
+# rename to avoid downloading "newer" version during generate-bootstraps.sh phase
+for package in libc++ ndk-multilib ndk-sysroot vulkan-loader-android; do
+	REVISION=""
+	if [ -e "$REPOROOT/output/${package}_${TERMUX_NDK_VERSION_NUM}${TERMUX_NDK_REVISION}.deb" ]; then
+		if [ -n "$(. "$REPOROOT/termux-packages/packages/$package/build.sh" | echo "$TERMUX_PKG_REVISION")" ]; then
+			REVISION=$(. "$REPOROOT/termux-packages/packages/$package/build.sh" | echo "$TERMUX_PKG_REVISION")
+		fi
+		mv -v "$REPOROOT/output/${package}_${TERMUX_NDK_VERSION_NUM}${TERMUX_NDK_REVISION}.deb" "$REPOROOT/output/${package}_${TERMUX_NDK_VERSION_LATEST}${REVISION}.deb"
+	fi
+done
 
 echo "[*] Moving packages..."
 mv "output" "$REPOROOT/output"

@@ -154,9 +154,9 @@ pull_package() {
 			# since each generate-bootstraps.sh run will have different package_tmpdir
 			# we dont have to check existence of both files and even so prioritise the cached copy
 			# also use symbolic link to save space and I/O
-			echo "[*] CACHE: Checking '$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR' for cached copy of '$package_name' package file..."
+			echo "[*] CACHE: Checking for cached copy of '$package_file' for package '$package_name'..."
 			if [ -e "$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR/$package_file" ]; then
-				echo "[*] CACHE: Symlinking '$package_file' to '$package_tmpdir'..."
+				echo "[*] CACHE: Found cached copy '$package_file'! Symlinking..."
 				rm -f "$package_tmpdir/package.deb"
 				ln -fs "$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR/$package_file" "$package_tmpdir/package.deb"
 			else
@@ -436,8 +436,14 @@ if [ "$TERMUX_PACKAGE_DOWNLOAD_CACHE" = true ]; then
 		echo "[!] Option '--cache' does not support '$TERMUX_PACKAGE_MANAGER' yet." >&2
 		exit 1
 	fi
-	echo "[*] CACHE: Enabled. Cached packages will be stored at '$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR'."
+	echo "[*] CACHE: Caching enabled. Cached packages will be stored and reused."
+	echo "[*] CACHE: Cache directory     = $TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR"
+	echo "[*] CACHE: Temporary directory = $BOOTSTRAP_TMPDIR"
 	mkdir -p "$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR"
+	if [ ! -d "$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR" ]; then
+		echo "[!] CACHE: Failed to create cache directory '$TERMUX_PACKAGE_DOWNLOAD_CACHE_DIR'." >&2
+		exit 1
+	fi
 fi
 
 for package_arch in "${TERMUX_ARCHITECTURES[@]}"; do
