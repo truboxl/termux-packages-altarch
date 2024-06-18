@@ -11,18 +11,17 @@ index 24e933118..547a433af 100644
  		_ARCH="x86"
  		# Specify --disable-asm to prevent text relocations on i686,
 diff --git a/packages/libgcrypt/build.sh b/packages/libgcrypt/build.sh
-index 45dd7e648..0826f8039 100644
+index 45dd7e648..544440071 100644
 --- a/packages/libgcrypt/build.sh
 +++ b/packages/libgcrypt/build.sh
-@@ -39,7 +39,7 @@ termux_step_pre_configure() {
- 		# See http://marc.info/?l=gnupg-devel&m=139136972631909&w=3
- 		CFLAGS+=" -mno-unaligned-access"
- 		# Avoid text relocations:
--		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" gcry_cv_gcc_inline_asm_neon=no"
-+		#TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" gcry_cv_gcc_inline_asm_neon=no"
- 	elif [ "$TERMUX_ARCH" = i686 ] || [ "$TERMUX_ARCH" = x86_64 ]; then
- 		# Fix i686 android build, also in https://bugzilla.gnome.org/show_bug.cgi?id=724050
- 		TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=" --disable-asm"
+@@ -12,6 +12,7 @@ TERMUX_PKG_BREAKS="libgcrypt-dev"
+ TERMUX_PKG_REPLACES="libgcrypt-dev"
+ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+ --disable-jent-support
++--disable-neon-support
+ "
+ 
+ termux_step_post_get_source() {
 diff --git a/packages/libx265/source-CMakeLists.txt.patch b/packages/libx265/source-CMakeLists.txt.patch
 index 7b3a507d9..fb0c1d7aa 100644
 --- a/packages/libx265/source-CMakeLists.txt.patch
