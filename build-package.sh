@@ -18,8 +18,12 @@ arm-vfpv3-d16)
 	TERMUX_NDK_REVISION=c
 	patch -p1 -i "$REPOROOT/termux-packages.$1.lf.patch"
 	#patch -p1 -i "$REPOROOT/termux-packages.$1.crlf.patch"
-	./scripts/setup-ubuntu.sh
-	./scripts/setup-android-sdk.sh
+	echo "Setting up toolchain..."
+	t0=$(cut -d'.' -f1 /proc/uptime)
+	./scripts/setup-ubuntu.sh &>/dev/null
+	./scripts/setup-android-sdk.sh &>/dev/null
+	t1=$(cut -d'.' -f1 /proc/uptime)
+	echo "Done ... $((t1-t0))s"
 	rm -fr "$REPOROOT/output"
 	./build-package.sh -a "$TERMUX_ARCH" "$2"
 	;;
