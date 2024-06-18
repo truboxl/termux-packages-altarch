@@ -16,7 +16,7 @@ arm-vfpv3-d16)
 	TERMUX_NDK_VERSION_NUM=23
 	TERMUX_NDK_REVISION=c
 	patch -p1 -i "$REPOROOT/termux-packages.$1.lf.patch"
-	patch -p1 -i "$REPOROOT/termux-packages.$1.crlf.patch"
+	#patch -p1 -i "$REPOROOT/termux-packages.$1.crlf.patch"
 	./scripts/setup-ubuntu.sh
 	./scripts/setup-android-sdk.sh
 	rm -fr "$REPOROOT/output"
