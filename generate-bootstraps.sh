@@ -15,7 +15,7 @@ arm-vfpv3-d16)
 	TERMUX_NDK_VERSION_NUM=23
 	TERMUX_NDK_REVISION=c
 	patch -p1 -i "$REPOROOT/termux-packages.$1.lf.patch"
-	patch -p1 -i "$REPOROOT/termux-packages.$1.crlf.patch"
+	#patch -p1 -i "$REPOROOT/termux-packages.$1.crlf.patch"
 	# Temporarily add this until pull request is merged
 	cp -fv "$REPOROOT/generate-bootstraps-patch.sh" scripts/generate-bootstraps.sh
 	# Should not need to mkdir "$REPOROOT/output" if build-package.sh worked
