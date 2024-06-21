@@ -17,7 +17,6 @@ arm-vfpv3-d16)
 	# Special packages that extract libs from Android NDK that
 	# are built without NEON but the version label is kept
 	# higher to avoid build issues from other packages
-	local p
 	for p in libandroid-stub libc++ ndk-multilib ndk-sysroot vulkan-loader-android; do
 		sed \
 			-e "s|^TERMUX_PKG_SRCURL=.*|TERMUX_PKG_SRCURL=https://dl.google.com/android/repository/android-ndk-r23c-linux.zip|" \
