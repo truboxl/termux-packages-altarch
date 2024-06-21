@@ -6,7 +6,7 @@ export TERMUX_ARCH
 export TERMUX_NDK_VERSION_NUM
 export TERMUX_NDK_REVISION
 
-cd "$REPOROOT/termux-packages"
+pushd "$REPOROOT/termux-packages"
 git reset --hard
 
 case "$1" in
@@ -21,7 +21,7 @@ arm-vfpv3-d16)
 		sed \
 			-e "s|^TERMUX_PKG_SRCURL=.*|TERMUX_PKG_SRCURL=https://dl.google.com/android/repository/android-ndk-r23c-linux.zip|" \
 			-e "s|^TERMUX_PKG_SHA256=.*|TERMUX_PKG_SHA256=6ce94604b77d28113ecd588d425363624a5228d9662450c48d2e4053f8039242|" \
-			-i "$REPOROOT/packages/$p/build.sh"
+			-i "packages/$p/build.sh"
 	done
 	patch -p1 -i "$REPOROOT/termux-packages.$1.lf.patch"
 	#patch -p1 -i "$REPOROOT/termux-packages.$1.crlf.patch"
@@ -45,3 +45,5 @@ arm-vfpv3-d16)
 *)
 	mv -v bootstrap-*.zip "$REPOROOT"
 esac
+
+popd
