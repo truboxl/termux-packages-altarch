@@ -100,3 +100,45 @@ index 7b9be5459..9e99b2fd3 100644
  		LDFLAGS+=" -march=armv7-a"
  		export GOARCH=arm
  		export GOARM=7
+diff --git a/scripts/build/setup/termux_setup_no_integrated_as.sh b/scripts/build/setup/termux_setup_no_integrated_as.sh
+index f4d02ec6c..814c11c3b 100644
+--- a/scripts/build/setup/termux_setup_no_integrated_as.sh
++++ b/scripts/build/setup/termux_setup_no_integrated_as.sh
+@@ -28,18 +28,27 @@ termux_setup_no_integrated_as() {
+ 	for env in CC CXX; do
+ 		local cmd="$(eval echo \${$env})"
+ 		local w="$bin/$(basename "$cmd")"
+-		if [ ! -e "$w" ]; then
+-			cat > "$w" <<-EOF
+-				#!$(command -v sh)
+-				PATH="$binutils_cross_bin:\$PATH"
+-				exec "$(command -v "$cmd")" \
+-					--start-no-unused-arguments \
+-					-fno-integrated-as \
+-					--end-no-unused-arguments \
+-					"\$@"
++		if [ -e "$w" ]; then return; fi
++		if [[ "$(${cmd} -dumpversion | sed "s|\..*||")" -ge 14 ]]; then
++			cat > "$w" <<- EOF
++			#!$(command -v sh)
++			PATH="$binutils_cross_bin:\$PATH"
++			exec "$(command -v "$cmd")" \
++				--start-no-unused-arguments \
++				-fno-integrated-as \
++				--end-no-unused-arguments \
++				"\$@"
++			EOF
++		else
++			cat > "$w" <<- EOF
++			#!$(command -v sh)
++			PATH="$binutils_cross_bin:\$PATH"
++			exec "$(command -v "$cmd")" \
++				-fno-integrated-as \
++				"\$@"
+ 			EOF
+-			chmod 0700 "$w"
+ 		fi
++		chmod 0700 "$w"
+ 	done
+ 	export PATH="$bin:$PATH"
+ }
