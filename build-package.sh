@@ -6,7 +6,6 @@ export TERMUX_NDK_VERSION_LATEST=$(. "$REPOROOT/termux-packages/scripts/properti
 export TERMUX_ARCH
 export TERMUX_NDK_VERSION_NUM
 export TERMUX_NDK_REVISION
-export TERMUX_PKG_ENABLE_CLANG16_PORTING=false
 
 pushd "$REPOROOT/termux-packages"
 git reset --hard
