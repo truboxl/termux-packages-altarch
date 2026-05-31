@@ -1,17 +1,14 @@
-diff --git a/packages/ffmpeg/build.sh b/packages/ffmpeg/build.sh
-index 24e933118..547a433af 100644
 --- a/packages/ffmpeg/build.sh
 +++ b/packages/ffmpeg/build.sh
-@@ -37,7 +37,6 @@ termux_step_configure() {
- 	local _EXTRA_CONFIGURE_FLAGS=""
- 	if [ $TERMUX_ARCH = "arm" ]; then
- 		_ARCH="armeabi-v7a"
--		_EXTRA_CONFIGURE_FLAGS="--enable-neon"
- 	elif [ $TERMUX_ARCH = "i686" ]; then
- 		_ARCH="x86"
- 		# Specify --disable-asm to prevent text relocations on i686,
-diff --git a/packages/libgcrypt/build.sh b/packages/libgcrypt/build.sh
-index 45dd7e648..544440071 100644
+@@ -44,7 +44,7 @@ termux_step_configure() {
+ 		;;
+ 		"arm")
+ 			_ARCH="armeabi-v7a"
+-			_EXTRA_CONFIGURE_FLAGS="--enable-neon"
++			_EXTRA_CONFIGURE_FLAGS="--disable-neon"
+ 			# use '-Wno-error=incompatible-pointer-types' with 32-bit ARM target to work around
+ 			# error: incompatible function pointer types initializing
+ 			# 'PFN_vkDebugUtilsMessengerCallbackEXT'... with an expression of type 'VkBool32`...
 --- a/packages/libgcrypt/build.sh
 +++ b/packages/libgcrypt/build.sh
 @@ -12,6 +12,7 @@ TERMUX_PKG_BREAKS="libgcrypt-dev"
@@ -22,11 +19,9 @@ index 45dd7e648..544440071 100644
  "
  
  termux_step_post_get_source() {
-diff --git a/packages/libx265/source-CMakeLists.txt.patch b/packages/libx265/source-CMakeLists.txt.patch
-index 7b3a507d9..fb0c1d7aa 100644
 --- a/packages/libx265/source-CMakeLists.txt.patch
 +++ b/packages/libx265/source-CMakeLists.txt.patch
-@@ -23,8 +23,8 @@ index a407271b4..6ecfda3ee 100755
+@@ -23,8 +23,8 @@ index 5c6dda9..972bca3 100755
  -            set(ARM_ARGS -mcpu=native -mfloat-abi=hard -mfpu=vfp -marm)
  -        endif()
  +        # Follow termux_step_setup_toolchain.sh
@@ -35,13 +30,11 @@ index 7b3a507d9..fb0c1d7aa 100644
 ++        set(ARM_ARGS @TERMUX_CLANG_TARGET_ARM@ -march=armv7-a -mfpu=vfpv3-d16 -mfloat-abi=softfp -mthumb -fPIC)
 ++ 
       endif()
-  	if(ARM64 OR CROSS_COMPILE_ARM64)
- -	    set(ARM_ARGS -fPIC -flax-vector-conversions)
-diff --git a/packages/ndk-sysroot/build.sh b/packages/ndk-sysroot/build.sh
-index 2c5dd46d4..9796a67be 100644
+      if(ARM64)
+          set(CPU_HAS_NEON 1)
 --- a/packages/ndk-sysroot/build.sh
 +++ b/packages/ndk-sysroot/build.sh
-@@ -67,16 +67,16 @@ termux_step_make_install() {
+@@ -83,7 +83,7 @@ termux_step_make_install() {
  	cp toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$TERMUX_HOST_PLATFORM/$TERMUX_PKG_API_LEVEL/*.o \
  		$TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX/lib
  
@@ -49,49 +42,22 @@ index 2c5dd46d4..9796a67be 100644
 +	cp toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$TERMUX_HOST_PLATFORM/$TERMUX_PKG_API_LEVEL/libcompiler_rt-extras.a \
  		$TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX/lib/
  
- 	NDK_ARCH=$TERMUX_ARCH
+ 	cp toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$TERMUX_HOST_PLATFORM/libc++experimental.a \
+@@ -93,9 +93,9 @@ termux_step_make_install() {
  	test $NDK_ARCH == 'i686' && NDK_ARCH='i386'
  
- 	# clang 13 requires libunwind on Android.
--	cp toolchains/llvm/prebuilt/linux-x86_64/lib/clang/17/lib/linux/$NDK_ARCH/libatomic.a \
+ 	# clang requires libunwind on Android.
+-	cp toolchains/llvm/prebuilt/linux-x86_64/lib/clang/21/lib/linux/$NDK_ARCH/libatomic.a \
 +	cp toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/12.0/lib/linux/$NDK_ARCH/libatomic.a \
  		$TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX/lib
--	cp toolchains/llvm/prebuilt/linux-x86_64/lib/clang/17/lib/linux/$NDK_ARCH/libunwind.a \
+-	cp toolchains/llvm/prebuilt/linux-x86_64/lib/clang/21/lib/linux/$NDK_ARCH/libunwind.a \
 +	cp toolchains/llvm/prebuilt/linux-x86_64/lib64/clang/12.0/lib/linux/$NDK_ARCH/libunwind.a \
  		$TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX/lib
  
  	# librt and libpthread are built into libc on android, so setup them as symlinks
-diff --git a/packages/pypy/0007-termux-build.patch b/packages/pypy/0007-termux-build.patch
-index 6622daad2..7520d2e0f 100644
---- a/packages/pypy/0007-termux-build.patch
-+++ b/packages/pypy/0007-termux-build.patch
-@@ -197,7 +197,7 @@ diff -uNr pypy2.7-v7.3.6-src/rpython/translator/platform/__init__.py pypy2.7-v7.
- +
- +def _update_cflags_for_termux_arm(cflags):
- +    return ('-I' + TARGET_ROOTFS_BASE + '@TERMUX_PREFIX@/include',
--+            "-march=armv7-a", "-mfpu=neon",
-++            "-march=armv7-a", "-mfpu=vfpv3-d16",
- +            "-mfloat-abi=softfp", "-mthumb", 
- +            "-Wno-incompatible-function-pointer-types", ) + cflags
- +
-diff --git a/packages/pypy3/0007-termux-build.patch b/packages/pypy3/0007-termux-build.patch
-index 6622daad2..7520d2e0f 100644
---- a/packages/pypy3/0007-termux-build.patch
-+++ b/packages/pypy3/0007-termux-build.patch
-@@ -197,7 +197,7 @@ diff -uNr pypy2.7-v7.3.6-src/rpython/translator/platform/__init__.py pypy2.7-v7.
- +
- +def _update_cflags_for_termux_arm(cflags):
- +    return ('-I' + TARGET_ROOTFS_BASE + '@TERMUX_PREFIX@/include',
--+            "-march=armv7-a", "-mfpu=neon",
-++            "-march=armv7-a", "-mfpu=vfpv3-d16",
- +            "-mfloat-abi=softfp", "-mthumb", 
- +            "-Wno-incompatible-function-pointer-types", ) + cflags
- +
-diff --git a/scripts/build/toolchain/termux_setup_toolchain_23c.sh b/scripts/build/toolchain/termux_setup_toolchain_23c.sh
-index 7b9be5459..9e99b2fd3 100644
 --- a/scripts/build/toolchain/termux_setup_toolchain_23c.sh
 +++ b/scripts/build/toolchain/termux_setup_toolchain_23c.sh
-@@ -43,7 +43,7 @@ termux_setup_toolchain_23c() {
+@@ -44,7 +44,7 @@ termux_setup_toolchain_23c() {
  		# https://developer.android.com/ndk/guides/standalone_toolchain.html#abi_compatibility:
  		# "We recommend using the -mthumb compiler flag to force the generation of 16-bit Thumb-2 instructions".
  		# With r13 of the ndk ruby 2.4.0 segfaults when built on arm with clang without -mthumb.
